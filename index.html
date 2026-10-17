@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pilzbuch – Frühjahrspilze</title>
+<style>
+:root{--bg:#f6f2ea;--card:#fffdf8;--ink:#2b2620;--mut:#7a6f62;--acc:#7a4b22;--line:#e3dccf;--warn:#a3341f;--ok:#3d6b35}
+*{box-sizing:border-box}body{margin:0;font-family:Georgia,"Iowan Old Style",serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:.7rem 1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+header h1{font-size:1.1rem;margin:0;white-space:nowrap}header a{color:inherit;text-decoration:none}
+.search{flex:1;min-width:200px;position:relative}.search input{width:100%;padding:.55rem .8rem;font:inherit;border:1px solid var(--line);border-radius:8px;background:#fff}
+#results{position:absolute;left:0;right:0;top:110%;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px #0002;max-height:60vh;overflow:auto;display:none}
+#results a{display:block;padding:.6rem .8rem;border-bottom:1px solid var(--line);color:inherit;text-decoration:none}#results a:hover,#results a.sel{background:#f3ece0}
+#results small{color:var(--mut);display:block;font-size:.85rem}mark{background:#f5d98b;padding:0 1px}
+main{max-width:860px;margin:0 auto;padding:1rem}
+.hero img{width:100%;border-radius:10px;display:block;box-shadow:0 4px 18px #0002}
+.meta{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0 .3rem;font-size:.85rem}.tag{background:#ece4d6;border-radius:99px;padding:.15rem .7rem}
+.tag.wert{background:var(--ok);color:#fff}
+h2{font-size:1.9rem;margin:.2rem 0 0;line-height:1.2}.latin{font-style:italic;color:var(--mut);font-size:1.15rem;margin:0 0 1rem}
+section.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin:1rem 0}
+section.box h3{margin:0 0 .4rem;font-size:1rem;letter-spacing:.03em;text-transform:uppercase;color:var(--acc);font-family:system-ui,sans-serif}
+section.warn{border-left:5px solid var(--warn)}section.warn h3{color:var(--warn)}
+.steck{display:grid;grid-template-columns:max-content 1fr;gap:.2rem 1rem;font-size:.95rem}.steck dt{color:var(--mut)}.steck dd{margin:0}
+nav.pager{display:flex;justify-content:space-between;gap:1rem;margin:2rem 0 1rem}
+nav.pager a{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem;color:inherit;text-decoration:none}
+nav.pager a:hover{border-color:var(--acc)}nav.pager .r{text-align:right}nav.pager small{color:var(--mut);display:block}
+.strip{display:flex;gap:.6rem;overflow-x:auto;padding:.5rem 0 1rem;scroll-snap-type:x mandatory}
+.strip a{flex:0 0 140px;scroll-snap-align:start;text-decoration:none;color:inherit;font-size:.8rem;text-align:center}
+.strip img{width:140px;height:105px;object-fit:cover;border-radius:8px;border:3px solid transparent}.strip a.cur img{border-color:var(--acc)}
+footer{text-align:center;color:var(--mut);font-size:.8rem;padding:1rem}
+</style></head><body>
+<header><h1><a href="#">🍄 Pilzbuch</a></h1><div class="search"><input id="q" type="search" placeholder="Volltextsuche: Name, Merkmal, Standort, Giftpilz …" autocomplete="off"><div id="results"></div></div></header>
+<main id="app"></main><footer>Texte transkribiert aus Buchseiten (S. 25–31). Keine Verzehrempfehlung – Pilze immer von einer Pilzberatung prüfen lassen.</footer>
+<script src="data.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss');
+function render(){
+  const id=location.hash.slice(1)||PILZE[0].id;let i=PILZE.findIndex(p=>p.id===id);if(i<0)i=0;
+  const p=PILZE[i],prev=PILZE[(i-1+PILZE.length)%PILZE.length],next=PILZE[(i+1)%PILZE.length];
+  document.title=p.name+' – Pilzbuch';
+  $('#app').innerHTML=`<div class="hero"><img src="${p.bild}" alt="${p.name}"></div>
+  <div class="meta"><span class="tag wert">Speisewert: ${p.wert}</span><span class="tag">${p.saison}</span><span class="tag">${p.standort}</span><span class="tag">Buchseite ${p.seite}</span></div>
+  <h2>${p.name}</h2><p class="latin">${p.latein}</p>
+  <section class="box"><h3>Steckbrief</h3><dl class="steck"><dt>Deutscher Name</dt><dd>${p.name}</dd><dt>Wissenschaftl.</dt><dd><i>${p.latein}</i></dd><dt>Saison</dt><dd>${p.saison}</dd><dt>Standort</dt><dd>${p.standort}</dd><dt>Speisewert</dt><dd>${p.wert}</dd></dl></section>
+  <section class="box"><h3>Den Pilz erkennen</h3><p>${p.erkennen}</p></section>
+  <section class="box warn"><h3>⚠ Giftige Doppelgänger</h3><p>${p.doppelgaenger}</p></section>
+  <section class="box"><h3>Tipps für die Küche</h3><p>${p.kueche}</p></section>
+  <nav class="pager"><a href="#${prev.id}"><small>← vorheriger Pilz</small>${prev.name}</a><a class="r" href="#${next.id}"><small>nächster Pilz →</small>${next.name}</a></nav>
+  <div class="strip">${PILZE.map(x=>`<a href="#${x.id}" class="${x.id===p.id?'cur':''}"><img src="${x.bild}" alt="">${x.name.split(',')[0]}</a>`).join('')}</div>`;
+  scrollTo(0,0);
+}
+const F={name:'Name',latein:'Latein',standort:'Standort',erkennen:'Erkennen',doppelgaenger:'Doppelgänger',kueche:'Küche',wert:'Speisewert'};
+function search(){
+  const q=$('#q').value.trim(),box=$('#results');if(q.length<2){box.style.display='none';return}
+  const terms=norm(q).split(/\s+/);const out=[];
+  for(const p of PILZE){const all=norm(Object.keys(F).map(k=>p[k]).join(' '));if(!terms.every(t=>all.includes(t)))continue;
+    let snip='',where=[];for(const k in F){const n=norm(p[k]);if(terms.some(t=>n.includes(t))){where.push(F[k]);if(!snip){const pos=n.indexOf(terms.find(t=>n.includes(t)));snip=(pos>40?'…':'')+p[k].slice(Math.max(0,pos-40),pos+90)+'…'}}}
+    let h=esc(snip);q.split(/\s+/).forEach(t=>{h=h.replace(new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>')});
+    out.push(`<a href="#${p.id}"><b>${p.name}</b> <i>${p.latein}</i><small>Treffer in: ${where.join(', ')}</small><small>${h}</small></a>`)}
+  box.innerHTML=out.join('')||'<a><small>Keine Treffer</small></a>';box.style.display='block';
+}
+$('#q').addEventListener('input',search);
+$('#results').addEventListener('click',()=>{$('#results').style.display='none';$('#q').value=''});
+document.addEventListener('keydown',e=>{if(document.activeElement===$('#q'))return;const i=PILZE.findIndex(p=>'#'+p.id===location.hash);const j=Math.max(0,i);
+ if(e.key==='ArrowRight')location.hash=PILZE[(j+1)%PILZE.length].id;if(e.key==='ArrowLeft')location.hash=PILZE[(j-1+PILZE.length)%PILZE.length].id});
+addEventListener('hashchange',render);render();
+</script></body></html>
